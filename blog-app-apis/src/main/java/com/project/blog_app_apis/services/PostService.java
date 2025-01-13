@@ -18,7 +18,7 @@ public interface PostService {
 	void deletePost(Integer postId);
 	
 	//get all posts
-	PostResponse getAllPost(Integer pageNumber, Integer pageSize);
+	PostResponse getAllPost(Integer pageNumber, Integer pageSize, String sortBy, String sortDir);
 	
 	//get single post
 	PostDto getPostById(Integer postId);
@@ -26,10 +26,10 @@ public interface PostService {
 	//get all post by category  //can apply pagination here
 	List<PostDto> getPostsByCategory(Integer categoryId);
 	
-	//get all posts by user      //can apply pagination here
+	//get all posts by user     //can apply pagination here
 	List<PostDto> getPostsByUser(Integer userId);
 	
 	//search posts
-	List<Post> searchPosts(String keyword);
+	List<PostDto> searchPosts(String keywords);
 	
 }

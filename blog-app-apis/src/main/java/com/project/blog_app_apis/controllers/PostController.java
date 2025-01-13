@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.project.blog_app_apis.config.AppConstants;
 import com.project.blog_app_apis.entities.Post;
 import com.project.blog_app_apis.payloads.ApiResponse;
 import com.project.blog_app_apis.payloads.PostDto;
@@ -57,10 +58,13 @@ public class PostController {
 	//get all posts
 	@GetMapping("/posts")
 	public ResponseEntity<PostResponse> getAllPost(
-			@RequestParam(value = "pageNumber", defaultValue = "0", required = false) Integer pageNumber, //pagenumber matlab 1 ya 2 ya 3 page pe hai
-			@RequestParam(value = "pageSize", defaultValue = "10", required = false) Integer pageSize //page size matlab 1 page me kitne post/records chahiye
+			//its not good practice to use hardcode values like here v used here for defaultValue, so make it CNOSTANT and store it in one file(e.g config ->AppConstant) and use from that
+			@RequestParam(value = "pageNumber", defaultValue = AppConstants.PAGE_NUMBER, required = false) Integer pageNumber, //pagenumber matlab 1 ya 2 ya 3 page pe hai
+			@RequestParam(value = "pageSize", defaultValue = AppConstants.PAGE_SIZE, required = false) Integer pageSize, //page size matlab 1 page me kitne post/records chahiye
+			@RequestParam(value = "sortBy", defaultValue = AppConstants.SORT_BY, required = false) String sortBy, //sorting
+			@RequestParam(value = "sortDir", defaultValue = AppConstants.SORT_DIR, required = false) String sortDir
 			) {
-		PostResponse postResponse = this.postService.getAllPost(pageNumber, pageSize);
+		PostResponse postResponse = this.postService.getAllPost(pageNumber, pageSize, sortBy, sortDir);
 		return new ResponseEntity<PostResponse>(postResponse, HttpStatus.OK);
 	}
 	
@@ -83,5 +87,13 @@ public class PostController {
 	public ResponseEntity<PostDto> updatePost(@RequestBody PostDto postDto, @PathVariable Integer postId) {
 		PostDto updatedPost = this.postService.updatePost(postDto, postId);
 		return new ResponseEntity<PostDto>(updatedPost, HttpStatus.OK);
+	}
+	
+	//searching
+	@GetMapping("/posts/search/{keywords}")
+	public ResponseEntity<List<PostDto>> searchPostByTitle(@PathVariable("keywords") String keywords) {
+		List<PostDto> result = this.postService.searchPosts(keywords);
+		return new ResponseEntity<List<PostDto>>(result, HttpStatus.OK);
+		
 	}
 }
