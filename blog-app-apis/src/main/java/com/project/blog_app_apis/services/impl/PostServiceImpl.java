@@ -2,16 +2,22 @@ package com.project.blog_app_apis.services.impl;
 
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.project.blog_app_apis.entities.Category;
 import com.project.blog_app_apis.entities.Post;
 import com.project.blog_app_apis.entities.User;
 import com.project.blog_app_apis.exceptions.ResourceNotFoundException;
+import com.project.blog_app_apis.payloads.CategoryDto;
 import com.project.blog_app_apis.payloads.PostDto;
+import com.project.blog_app_apis.payloads.PostResponse;
 import com.project.blog_app_apis.repositories.CategoryRepo;
 import com.project.blog_app_apis.repositories.PostRepo;
 import com.project.blog_app_apis.repositories.UserRepo;
@@ -50,39 +56,67 @@ public class PostServiceImpl implements PostService {
 	}
 
 	@Override
-	public Post updatePost(PostDto postDto, Integer postId) {
-		// TODO Auto-generated method stub
-		return null;
+	public PostDto updatePost(PostDto postDto, Integer postId) {
+		Post post = this.postRepo.findById(postId).orElseThrow(() -> new ResourceNotFoundException("Post", "post id ", postId));
+		
+		post.setTitle(postDto.getTitle());
+		post.setContent(postDto.getContent());
+		post.setImageName(postDto.getImageName());
+		Post updatedPost = this.postRepo.save(post);
+		
+		return this.modelMapper.map(updatedPost, PostDto.class);
 	}
 
 	@Override
 	public void deletePost(Integer postId) {
-		// TODO Auto-generated method stub
+		Post post = this.postRepo.findById(postId).orElseThrow(() -> new ResourceNotFoundException("Post", "post id ", postId));
 
+		this.postRepo.delete(post);
 	}
 
 	@Override
-	public List<Post> getAllPost() {
-		// TODO Auto-generated method stub
-		return null;
+	public PostResponse getAllPost(Integer pageNumber, Integer pageSize) {
+		
+//		int pageSize = 5;  hardcoded
+//		int pageNumber = 1;
+		
+		Pageable pageable = PageRequest.of(pageNumber, pageSize);
+		Page<Post> pagePost = this.postRepo.findAll(pageable);
+		List<Post> allPosts = pagePost.getContent();
+		
+		List<PostDto> postDtos = allPosts.stream().map((post) -> this.modelMapper.map(post, PostDto.class)).collect(Collectors.toList());
+		
+		PostResponse postResponse = new PostResponse();
+		postResponse.setContent(postDtos);
+		postResponse.setPageNumber(pagePost.getNumber());
+		postResponse.setPageSize(pagePost.getSize());
+		postResponse.setTotalElements(pagePost.getTotalElements());
+		postResponse.setTotalPages(pagePost.getTotalPages());
+		postResponse.setLastPage(pagePost.isLast());
+		
+		return postResponse ;
 	}
 
 	@Override
-	public Post getPostById(Integer postId) {
-		// TODO Auto-generated method stub
-		return null;
+	public PostDto getPostById(Integer postId) {
+		Post post = this.postRepo.findById(postId).orElseThrow(() -> new ResourceNotFoundException("Post", "post id ", postId));
+		return this.modelMapper.map(post, PostDto.class);
 	}
 
 	@Override
-	public List<Post> getPostsByCategory(Integer categoryId) {
-		// TODO Auto-generated method stub
-		return null;
+	public List<PostDto> getPostsByCategory(Integer categoryId) {
+		Category category = this.categoryRepo.findById(categoryId).orElseThrow(() -> new ResourceNotFoundException("Category ", "Category Id", categoryId));
+		List<Post> posts = this.postRepo.findByCategory(category);
+		List<PostDto> postDtos = posts.stream().map((post) -> this.modelMapper.map(post, PostDto.class)).collect(Collectors.toList());
+		return postDtos;
 	}
 
 	@Override
-	public List<Post> getPostsByUser(Integer userId) {
-		// TODO Auto-generated method stub
-		return null;
+	public List<PostDto> getPostsByUser(Integer userId) {
+		User user = this.userRepo.findById(userId).orElseThrow(() -> new ResourceNotFoundException("User ", "User Id", userId));
+		List<Post> posts = this.postRepo.findByUser(user);
+		List<PostDto> postDtos = posts.stream().map((post) -> this.modelMapper.map(post, PostDto.class)).collect(Collectors.toList());
+		return postDtos;
 	}
 
 	@Override
